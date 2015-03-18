@@ -1,0 +1,34 @@
+<apex:page controller="CNTRL_DonorClassRollup" title="Donor Classification Rollup" tabStyle="Opportunity">	
+	<style>
+		ul.err li {
+			list-style-type: none;
+			color: #cc0000;
+			font-weight: bold;
+		}
+	</style>
+	<apex:sectionHeader title="Batch Donor Classification/Opportunity Rollup" />
+	<apex:messages styleClass="err" />
+	<apex:form >
+		<apex:pageBlock >			
+			<apex:pageBlockButtons rendered="{!batching}">
+				<apex:commandButton action="{!rollup}" value="Continue"	disabled="{!batchRunning}" />
+				<apex:commandButton action="{!cancel}" value="Cancel" />
+			</apex:pageBlockButtons>			
+			<apex:outputText rendered="{!batching}">
+				Use this page to re-calculate donor classifications based on all closed opportunities, saving the results in
+				contact, household, and organization records. You can re-calculate either the current or custom donor classification 
+				or both both at the same time. The process may take some time; you can close this page and the process 
+				will continue in the background. You can monitor the job's progress under Setup->Monitor->Apex Jobs.													
+			</apex:outputText>			
+			<br/><br/>			
+			<apex:pageBlockSection columns="3">			   
+				<apex:inputCheckbox label="Recalculate Current Donor Classification" value="{!currentDonorClass}"/>				
+				<apex:inputCheckbox label="Recalculate Custom Donor Classification" value="{!customDonorClass}"/>				
+				<apex:inputText label="based on custom date: " value="{!customDate}" id="customDateId" onclick="DatePicker.pickDate(false,this,false);" />				
+			</apex:pageBlockSection>
+			
+		</apex:pageBlock>
+		<apex:outputPanel rendered="{!batchRunning}">			
+		</apex:outputPanel>
+	</apex:form>
+</apex:page>

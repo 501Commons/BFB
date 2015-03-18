@@ -1,0 +1,167 @@
+<apex:page controller="MarkDonationsThankedController">
+  <h1>Donor Recognition</h1>
+  
+  <br /><br />
+  <!-- apex:outputLink value="/00OE0000001Sg3Y" target="_blank">View a report of steward assignments</apex:outputLink><br /><br / -->
+
+  <apex:form >  	  	  	
+   <table><tr><td>
+  	<apex:outputLabel value="Please Select Donor Steward: " for="DonorSteward" />
+  	<apex:selectList value="{!donorSteward}" id="DonorSteward" size="1">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel" status="pageStatus"/>
+  		<apex:selectOptions value="{!DonorStewards}"/>
+  	</apex:selectList>
+
+	<br /><br />
+	<apex:outputLabel value=" Filter out records without valid Phone? " for="filterPhone" />
+	<apex:inputCheckbox id="filterPhone" value="{!filterBlankPhone}">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel" status="pageStatus"/>
+	</apex:inputCheckbox>
+
+	<br /><br />
+	<apex:outputLabel value=" Filter out Donations less than: " for="donationAmount" />
+  	<apex:selectList value="{!donationAmount}" id="donationAmount" size="1">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel" status="pageStatus"/>
+  		<apex:selectOptions value="{!DonationAmounts}"/>
+  	</apex:selectList>
+
+	<br /><br />
+	<apex:outputLabel value=" Donation Record Type: " for="recordTypeName" />
+  	<apex:selectList value="{!recordTypeName}" id="recordType" size="1">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel" status="pageStatus"/>
+  		<apex:selectOptions value="{!RecordTypeOptions}"/>
+  	</apex:selectList>
+
+	</td><td>&nbsp;&nbsp;&nbsp;</td><td>
+  	<apex:outputLabel value="Please Select Donor Classification; hold CNTRL or COMMAND to select multiple: " for="DonorClassification" />
+	<br />
+
+  	<apex:selectList value="{!donorClassification}" id="DonorClassification" multiselect="true">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel" status="pageStatus"/>
+  		<apex:selectOptions value="{!DonorClassifications}"/>
+  	</apex:selectList>
+	</td></tr></table>
+  </apex:form>
+
+  <br /> 
+  
+  <apex:actionStatus id="pageStatus">
+	    <apex:facet name="start">
+	        <apex:outputPanel >
+	            <img src="/img/loading32.gif" width="25" height="25" />
+	            <apex:outputLabel value="Loading..."/>
+	        </apex:outputPanel>            
+	    </apex:facet>
+  </apex:actionStatus>	
+  
+  <apex:pageBlock >
+  <apex:outputPanel id="resultPanel">
+  <apex:form id="markThankedForm" rendered="{!loadedDonations}">
+  <apex:outputLabel value="Donations Requiring Action" for="resultPanel" />
+  <br />
+  <apex:messages />
+  <br />
+  <h2>When donor has been called, click the checkbox to mark the corresponding donation as "called" and then click the "Submit" button to make the change final</h2>
+  <br />  <br />
+  <h3>Contact Donations</h3>
+  <br />
+  <br /><apex:commandButton action="{!markThanked}" rerender="resultPanel" value="Submit" status="pageStatus"/><br />
+  <apex:pageBlockTable value="{!TableRows}" var="row">
+     <apex:column headerValue="Called">
+     	<apex:inputCheckbox value="{!row.theDonation.Donor_Called__c}">
+     		<!-- apex:actionSupport event="onchange" action="{!markThanked}" rerender="resultPanel" / --> 
+     	</apex:inputCheckbox>
+     </apex:column>
+     <apex:column headerValue="Left message">
+     	<apex:inputCheckbox value="{!row.theDonation.Called_Left_Message__c}">
+     	</apex:inputCheckbox>
+     </apex:column>
+     <apex:column headerValue="No Call Needed">
+     	<apex:inputCheckbox value="{!row.theDonation.No_Call_Needed__c}">
+     	</apex:inputCheckbox>
+     </apex:column>
+     <apex:column headerValue="Donation"><apex:outputLink value="/{!row.theDonation.Id}" target="_blank"><!-- {!row.theDonation.Name} -->[view record]</apex:outputLink></apex:column>
+     <apex:column headerValue="Contact"><apex:outputLink value="/{!row.theContact.Id}" target="_blank">{!row.theContact.Name}</apex:outputLink></apex:column>
+     <apex:column headerValue="Household"><apex:outputLink value="/{!row.theContact.npo02__Household__c}" target="_blank">{!row.theContact.npo02__Household__r.Name}</apex:outputLink></apex:column>
+     <!-- apex:column value="{!row.theContact.Email}" / -->
+     <apex:column value="{!row.theContact.Phone}" />
+     <apex:column value="{!row.theContact.Donor_Classification__c}" /> 
+     <apex:column headerValue="Most Recent Call" value="{!row.theContact.Most_Recent_Recognition_Call_Date__c}" /> 
+     <apex:column value="{!row.theDonation.Program__c}" />
+     <apex:column value="{!row.theContact.MailingStreet}" />
+     <apex:column value="{!row.theContact.MailingCity}" />
+     <apex:column value="{!row.theDonation.Amount}" />
+     <apex:column value="{!row.theDonation.CloseDate}" />
+  </apex:pageBlockTable>
+    <apex:commandButton action="{!markThanked}" rerender="resultPanel" value="Submit" status="pageStatus"/>
+
+  <br />  <br />
+  <h3>Organization Donations</h3>
+  <br />
+  <apex:pageBlockTable value="{!OrgTableRows}" var="row">
+     <apex:column headerValue="Called">
+     	<apex:inputCheckbox value="{!row.theDonation.Donor_Called__c}">
+     		<!-- apex:actionSupport event="onchange" action="{!markThanked}" rerender="resultPanel" / -->
+     	</apex:inputCheckbox>
+     </apex:column>
+     <apex:column headerValue="Left message">
+     	<apex:inputCheckbox value="{!row.theDonation.Called_Left_Message__c}">
+     	</apex:inputCheckbox>
+     </apex:column>
+     <apex:column headerValue="No Call Needed">
+     	<apex:inputCheckbox value="{!row.theDonation.No_Call_Needed__c}">
+     	</apex:inputCheckbox>
+     </apex:column>
+     <apex:column headerValue="Donation"><apex:outputLink value="/{!row.theDonation.Id}" target="_blank"><!--{!row.theDonation.Name}-->[view record]</apex:outputLink></apex:column>
+     <apex:column headerValue="Contact" value="{!row.theAccount.Informal_Contact_Name__c}"/>
+     <apex:column headerValue="Organization"><apex:outputLink value="/{!row.theAccount.Id}" target="_blank">{!row.theAccount.Name}</apex:outputLink></apex:column>
+     <apex:column value="{!row.theAccount.Phone}" />
+     <apex:column value="{!row.theAccount.Donor_Classification__c}" />
+     <apex:column headerValue="Most Recent Call" value="{!row.theAccount.Most_Recent_Recognition_Call_Date__c}" /> 
+     <apex:column value="{!row.theAccount.BillingStreet}" />
+     <apex:column value="{!row.theAccount.BillingCity}" />
+     <!--<apex:column value="{!row.theAccount.BillingState}" />
+     <apex:column value="{!row.theAccount.BillingPostalCode}" />-->
+     <apex:column value="{!row.theDonation.Amount}" />
+     <apex:column value="{!row.theDonation.CloseDate}" />
+  </apex:pageBlockTable>
+    <apex:commandButton action="{!markThanked}" rerender="resultPanel" value="Submit" status="pageStatus"/>
+  
+  </apex:form>
+
+  <br /><br />
+  <h2>All Donors attached to this steward</h2>
+  <br />
+
+  <apex:pageBlockTable rendered="{!allStewardedContacts != null}" value="{!allStewardedContacts}" var="contact">
+     <apex:column headerValue="Contact"><apex:outputLink value="/{!contact.Id}" target="_blank">{!contact.Name}</apex:outputLink></apex:column>
+     <apex:column headerValue="Household"><apex:outputLink value="/{!contact.npo02__Household__c}" target="_blank">{!contact.npo02__Household__r.Name}</apex:outputLink></apex:column>     
+     <apex:column value="{!contact.Donor_Classification__c}" />
+     <apex:column value="{!contact.npo02__LastCloseDate__c}" />
+     <apex:column value="{!contact.npo02__LastOppAmount__c}" />
+     <apex:column headerValue="Most Recent Call" value="{!contact.Most_Recent_Recognition_Call_Date__c}" />
+     <apex:column value="{!contact.Phone}" />
+     <apex:column value="{!contact.MailingStreet}" />
+     <apex:column value="{!contact.MailingCity}" />
+  </apex:pageBlockTable>
+
+
+  <br />
+  <h2>All Organizations attached to this steward</h2>
+  <br />
+
+  <apex:pageBlockTable rendered="{!allStewardedAccounts != null}" value="{!allStewardedAccounts}" var="account">
+     <apex:column headerValue="Account"><apex:outputLink value="/{!account.Id}" target="_blank">{!account.Name}</apex:outputLink></apex:column>
+     <apex:column value="{!account.Phone}" />
+     <apex:column headerValue="Most Recent Call" value="{!account.Most_Recent_Recognition_Call_Date__c}" />
+     <apex:column value="{!account.BillingStreet}" />
+     <apex:column value="{!account.BillingCity}" />
+     <apex:column value="{!account.BillingState}" />
+     <apex:column value="{!account.BillingPostalCode}" />
+  </apex:pageBlockTable>
+
+  </apex:outputPanel>
+
+  </apex:pageBlock>
+
+</apex:page>

@@ -1,0 +1,24 @@
+<apex:page standardcontroller="Campaign" extensions="CTRL_BFB_CampaignExtension" title="Better Campaign Member Management">
+    <apex:sectionHeader title="Better Campaign Member Management - {!campaignName}"/>
+    <apex:form >
+       <h1>Sort by:&nbsp;</h1>
+       <apex:selectList multiselect="false" size="1" value="{!sortMethod}">
+  	 <apex:selectOptions value="{!sortOptions}"/>
+         <apex:actionSupport event="onchange" rerender="campaignMembers"/>
+       </apex:selectList>
+       <br /><br />
+    <apex:pageBlock id="campaignMembers">
+    <apex:pageBlockTable value="{!CampaignMembers}" var="member">
+        <apex:column headerValue="Status">
+     	   <apex:selectList multiselect="false" size="1" value="{!member.status}">
+  		<apex:selectOptions value="{!CMStatuses}"/>
+ 	        <apex:actionSupport event="onchange" action="{!updateCampaignMembers}" />
+  	   </apex:selectList>
+	</apex:column>
+        <apex:repeat value="{!fields}" var="f">
+           <apex:column value="{!member[f.fieldPath]}"/>
+         </apex:repeat>
+    </apex:pageBlockTable>
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>

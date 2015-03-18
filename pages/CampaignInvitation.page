@@ -1,0 +1,117 @@
+<apex:page controller="CNTL_CampaignInvitation">
+  <h1>Invitation / Campaign Membership Support</h1>
+  
+  <br /><br />
+
+  <apex:form id="pageControls">
+   <table><tr><td>
+   	   <apex:outputLabel value="Choose a target campaign: " for="TargetCampaign" />
+	   <br />
+	   <apex:inputField id="TargetCampaign" value="{!targetCampaignMember.CampaignId}">
+       		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel,pageControls"/>
+	   </apex:inputField>
+	<br />
+  	<apex:outputLabel value="Please Select status for invitees: " for="CMStatus" />
+	<br />
+  	<apex:selectList value="{!campaignMemberStatus}" id="CMStatus" multiselect="false">
+  		<apex:selectOptions value="{!CMStatuses}"/>
+  	</apex:selectList>
+        </td><td>
+  	<apex:outputLabel value="Please Select Donor Classification; hold CNTRL or COMMAND to select multiple: " for="DonorClassification" />
+	<br />
+  	<apex:selectList value="{!donorClassification}" id="DonorClassification" multiselect="true">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel"/>
+  		<apex:selectOptions value="{!DonorClassifications}"/>
+  	</apex:selectList>
+        </td></tr>
+	<tr><td>
+	    <apex:outputLabel value="Only list donors who have given more than:" />
+	    <br />
+	    $ <apex:inputText id="GivingAmount" value="{!givingLevel}">
+  	         	<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel"/>
+            </apex:inputText>
+	    <br />
+	    <p>Only show contacts who have donated after:</p>
+	    <apex:inputField value="{!lastGiftDate.BirthDate}">
+  		<apex:actionSupport event="onchange" action="{!invokeService}" rerender="resultPanel"/>	      
+	    </apex:inputField>	    
+        </td>
+	</tr>
+        </table>
+  </apex:form>
+<br />
+ <br /> 
+  
+<apex:pageBlock >
+<apex:form id="exclusionControls">
+   	   <apex:outputLabel value="Select a Campaign; participants of these campaigns will be excluded from the potential list of invitees " />
+	   <br />
+	   <apex:inputField value="{!excludeCampaign.CampaignId}">
+       		<apex:actionSupport event="onchange" action="{!addToExcludeList}" rerender="exclusionPanel,resultPanel, exclusionControls" />
+	   </apex:inputField>
+           <br /><br />
+   	   <apex:outputLabel value="Restrict only certain types of participants in those campaigns:" />
+	   <br />
+	<apex:pageBlockTable value="{!excludedCMS}" var="cmsrow" >
+	     <apex:column >
+	        <apex:inputCheckbox value="{!cmsrow.selected}">
+      		    <apex:actionSupport event="onchange" action="{!invokeService}" rerender="exclusionPanel,resultPanel" />
+                </apex:inputCheckbox>
+	     <apex:outputLabel value="{!cmsrow.status}" />
+	     </apex:column>
+	</apex:pageBlockTable>
+	   <!-- apex:commandButton action="{!addToExcludeList}" rerender="resultPanel,exclusionPanel,exclusionControls" value="Update" / -->
+</apex:form>
+<br />
+  <apex:outputPanel id="exclusionPanel" >
+        <h2>Excluding members of the following campaigns from potential invitees</h2>
+	<apex:pageBlockTable value="{!excludedCampaigns}" var="member" >
+	     <apex:column value="Excluding members of '{!member.Name}' with Campaign Member Status '{!excludedStatusesAsString}'" />
+	</apex:pageBlockTable>
+</apex:outputPanel>
+</apex:pageBlock>
+
+
+  <apex:pageBlock >
+  <apex:messages /> <br />
+  <apex:outputPanel id="resultPanel">
+  <h1>
+     <apex:outputLabel value="Adding to Campaign: " />
+     <apex:outputLink value="/{!targetCampaignMember.CampaignId}">
+        <apex:outputLabel value="{!targetCampaignName}" />
+     </apex:outputLink> 
+     <apex:outputLabel value=" [{!numberOfCurrentInvitees} current members]" />
+   </h1>
+  <apex:form id="inviationForm" rendered="{!loadedContacts}">
+  <p>Select the checkboxes next to the invitees names and click "Invite" to invite them to the campiagn</p>
+  <br />
+  <apex:commandButton action="{!addToCampaign}" rerender="resultPanel" value="Invite"/><br />
+  <br />
+  <h3><apex:outputLabel value="There are {!numberOfPotentialInvitees} potential invitees meeting search criteria" /></h3><br />
+  <apex:pageBlockTable value="{!potentialInvitees}" var="row">
+     <apex:column headerValue="Invite">
+     	<apex:inputCheckbox value="{!row.selected}" />
+     </apex:column>
+     <apex:column value="{!row.theContact.Name}" />
+     <apex:column value="{!row.theContact.npo02__Household__c}" />
+     <apex:column value="{!row.theContact.Email}" />
+     <apex:column value="{!row.theContact.Phone}" />
+     <apex:column value="{!row.theContact.Donor_Classification__c}" />
+  </apex:pageBlockTable>
+<apex:commandButton action="{!addToCampaign}" rerender="resultPanel" value="Invite"/><br />
+ </apex:form>
+
+  <br />
+  <h3>Already Added to this campaign</h3>
+  <apex:pageBlockTable value="{!campaignMemberRows}" var="row" rendered="{!loadedCampaignMembers}">
+     <apex:column value="{!row.theContact.FirstName}" />
+     <apex:column value="{!row.theContact.LastName}" />
+     <apex:column value="{!row.theCampaignMember.Status}" />
+     <apex:column value="{!row.theCampaignMember.CampaignId}" />
+  </apex:pageBlockTable>
+
+  </apex:outputPanel>
+
+  </apex:pageBlock>
+
+</apex:page>
